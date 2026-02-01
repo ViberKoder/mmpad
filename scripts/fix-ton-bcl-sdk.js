@@ -67,31 +67,39 @@ if (fs.existsSync(packageJsonPath)) {
       // Если все еще не найдено, создаем корневой index.ts
       if (!foundEntry) {
         const indexPath = path.join(sdkPath, 'index.ts');
-        // Определяем, откуда импортировать
-        let importPath = './src/index';
-        if (fs.existsSync(path.join(sdkPath, 'src', 'index.ts'))) {
-          importPath = './src/index';
-        } else if (fs.existsSync(path.join(sdkPath, 'src', 'index.js'))) {
-          importPath = './src/index';
-        } else if (fs.existsSync(path.join(sdkPath, 'lib', 'index.js'))) {
-          importPath = './lib/index';
-        } else if (fs.existsSync(path.join(sdkPath, 'dist', 'index.js'))) {
-          importPath = './dist/index';
-        } else {
-          // Если ничего не найдено, создаем пустой экспорт
-          importPath = null;
+        // Определяем, откуда импортировать - проверяем все возможные места
+        let importPath = null;
+        const possibleSources = [
+          { path: path.join(sdkPath, 'src', 'index.ts'), import: './src/index' },
+          { path: path.join(sdkPath, 'src', 'index.js'), import: './src/index' },
+          { path: path.join(sdkPath, 'src', 'BclSDK.ts'), import: './src/BclSDK' },
+          { path: path.join(sdkPath, 'src', 'BclSDK.js'), import: './src/BclSDK' },
+          { path: path.join(sdkPath, 'lib', 'index.js'), import: './lib/index' },
+          { path: path.join(sdkPath, 'dist', 'index.js'), import: './dist/index' },
+        ];
+        
+        for (const source of possibleSources) {
+          if (fs.existsSync(source.path)) {
+            importPath = source.import;
+            console.log(`📦 Found source file: ${source.path}`);
+            break;
+          }
         }
         
+        // Если нашли файл, создаем wrapper с реэкспортом
+        // Если нет, создаем базовый экспорт с типами
         const wrapperContent = importPath 
           ? `// Auto-generated wrapper
 export * from '${importPath}';
+export { default } from '${importPath}';
 `
-          : `// Auto-generated wrapper - no source found
-export {};
+          : `// Auto-generated wrapper
+// Re-export common exports that might exist
+export * from './src';
 `;
         fs.writeFileSync(indexPath, wrapperContent);
         foundEntry = './index.ts';
-        console.log(`✅ Created root index.ts wrapper${importPath ? ` importing from ${importPath}` : ' (empty)'}`);
+        console.log(`✅ Created root index.ts wrapper${importPath ? ` importing from ${importPath}` : ' (fallback)'}`);
       }
     }
     
