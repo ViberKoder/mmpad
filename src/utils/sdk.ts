@@ -7,25 +7,30 @@ const TONFUN_API_ENDPOINT = import.meta.env.VITE_TONFUN_API_ENDPOINT || 'https:/
 const MASTER_ADDRESS = import.meta.env.VITE_MASTER_ADDRESS || 'EQBSMwczMFUb789uqNvebKBvemkRaAQJdzTFq6565Ef9rW2k';
 
 export async function initSDK(): Promise<BclSDK> {
-  const api = new Api(
-    new HttpClient({
-      baseUrl: 'https://tonapi.io',
-      baseApiParams: {
-        headers: {
-          "Content-type": "application/json",
-          ...(TONAPI_TOKEN ? { Authorization: `Bearer ${TONAPI_TOKEN}` } : {})
+  try {
+    const api = new Api(
+      new HttpClient({
+        baseUrl: 'https://tonapi.io',
+        baseApiParams: {
+          headers: {
+            "Content-type": "application/json",
+            ...(TONAPI_TOKEN ? { Authorization: `Bearer ${TONAPI_TOKEN}` } : {})
+          },
         },
+      })
+    );
+
+    const sdk = BclSDK.create({
+      apiProvider: simpleTonapiProvider(api),
+      clientOptions: {
+        endpoint: TONFUN_API_ENDPOINT,
       },
-    })
-  );
+      masterAddress: Address.parse(MASTER_ADDRESS),
+    });
 
-  const sdk = BclSDK.create({
-    apiProvider: simpleTonapiProvider(api),
-    clientOptions: {
-      endpoint: TONFUN_API_ENDPOINT,
-    },
-    masterAddress: Address.parse(MASTER_ADDRESS),
-  });
-
-  return sdk;
+    return sdk;
+  } catch (error) {
+    console.error('Error initializing SDK:', error);
+    throw error;
+  }
 }

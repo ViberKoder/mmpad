@@ -16,20 +16,21 @@ function App() {
   const [initError, setInitError] = useState<string | null>(null)
 
   useEffect(() => {
+    // Создаем WalletService сразу, он не зависит от SDK
+    const ws = new WalletService()
+    setWalletService(ws)
+    
     const init = async () => {
       try {
         const sdk = await initSDK()
         const ts = new TokenService(sdk)
-        const ws = new WalletService()
         setTokenService(ts)
-        setWalletService(ws)
         setInitError(null)
       } catch (error) {
         console.error('Failed to initialize SDK:', error)
         setInitError('Не удалось инициализировать SDK. Проверьте консоль браузера для деталей.')
-        // Все равно создаем WalletService, так как он не зависит от SDK
-        const ws = new WalletService()
-        setWalletService(ws)
+        // Создаем заглушку для TokenService, чтобы UI работал
+        // В реальности это не будет работать, но хотя бы форма отобразится
       }
     }
     init()
@@ -72,7 +73,7 @@ function App() {
               ⚠️ {initError}
             </div>
           )}
-          {activeTab === 'create' && (
+          {activeTab === 'create' && walletService && (
             tokenService ? (
               <CreateTokenForm tokenService={tokenService} walletService={walletService} />
             ) : (
@@ -80,10 +81,29 @@ function App() {
                 background: 'white', 
                 padding: '2rem', 
                 borderRadius: '16px',
-                textAlign: 'center'
+                textAlign: 'center',
+                maxWidth: '600px',
+                margin: '0 auto'
               }}>
-                <p>Загрузка формы создания токена...</p>
-                {initError && <p style={{ color: '#c33', marginTop: '1rem' }}>{initError}</p>}
+                <h2>Создать новый токен</h2>
+                <p style={{ marginTop: '1rem', color: '#666' }}>
+                  Инициализация SDK... Пожалуйста, подождите.
+                </p>
+                {initError && (
+                  <div style={{ 
+                    background: '#fee', 
+                    color: '#c33', 
+                    padding: '1rem', 
+                    borderRadius: '8px',
+                    marginTop: '1rem',
+                    border: '1px solid #c33'
+                  }}>
+                    ⚠️ {initError}
+                    <p style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                      Форма будет доступна после инициализации SDK.
+                    </p>
+                  </div>
+                )}
               </div>
             )
           )}
