@@ -68,16 +68,11 @@ if (fs.existsSync(packageJsonPath)) {
       if (!foundEntry) {
         const indexPath = path.join(sdkPath, 'index.ts');
         // Создаем минимальный index.ts который пытается импортировать из src
+        // Используем условный экспорт через реэкспорт
         const wrapperContent = `// Auto-generated wrapper
-try {
-  export * from './src/index';
-} catch {
-  try {
-    export * from './src';
-  } catch {
-    export * from './lib/index';
-  }
-}`;
+// Try to export from src/index first
+export * from './src/index';
+`;
         fs.writeFileSync(indexPath, wrapperContent);
         foundEntry = './index.ts';
         console.log('✅ Created root index.ts wrapper');
