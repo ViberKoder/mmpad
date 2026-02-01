@@ -4,6 +4,7 @@
   "description": "Memepad на базе TONFUN SDK",
   "type": "module",
   "scripts": {
+    "postinstall": "node scripts/fix-ton-bcl-sdk.js",
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
