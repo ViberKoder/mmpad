@@ -37,18 +37,50 @@ if (fs.existsSync(packageJsonPath)) {
     }
     
     if (!foundEntry) {
-      // Если ничего не найдено, создаем index.ts в src если папка существует
+      // Если ничего не найдено, проверяем что есть в пакете
+      const files = fs.readdirSync(sdkPath, { withFileTypes: true });
+      const dirs = files.filter(f => f.isDirectory()).map(d => d.name);
+      const tsFiles = files.filter(f => f.isFile() && f.name.endsWith('.ts')).map(f => f.name);
+      const jsFiles = files.filter(f => f.isFile() && f.name.endsWith('.js')).map(f => f.name);
+      
+      console.log('📁 Package structure:', { dirs, tsFiles, jsFiles });
+      
+      // Пробуем найти index в src
       if (fs.existsSync(srcPath)) {
-        const defaultIndexPath = path.join(srcPath, 'index.ts');
-        if (!fs.existsSync(defaultIndexPath)) {
-          // Создаем минимальный index.ts
-          fs.writeFileSync(defaultIndexPath, `export * from './index';`);
+        const srcFiles = fs.readdirSync(srcPath);
+        if (srcFiles.some(f => f.includes('index'))) {
+          foundEntry = './src/index.ts';
+          console.log('✅ Using src/index.ts');
+        } else if (srcFiles.length > 0) {
+          // Если есть другие файлы, создаем index.ts который экспортирует все
+          const indexPath = path.join(srcPath, 'index.ts');
+          const exports = srcFiles
+            .filter(f => f.endsWith('.ts') && !f.endsWith('.d.ts'))
+            .map(f => `export * from './${f.replace(/\.ts$/, '')}';`)
+            .join('\n');
+          fs.writeFileSync(indexPath, exports || 'export {};');
+          foundEntry = './src/index.ts';
+          console.log('✅ Created src/index.ts wrapper');
         }
-        foundEntry = './src/index.ts';
-        console.log('⚠️  No entry point found, using default: ./src/index.ts');
-      } else {
+      }
+      
+      // Если все еще не найдено, создаем корневой index.ts
+      if (!foundEntry) {
+        const indexPath = path.join(sdkPath, 'index.ts');
+        // Создаем минимальный index.ts который пытается импортировать из src
+        const wrapperContent = `// Auto-generated wrapper
+try {
+  export * from './src/index';
+} catch {
+  try {
+    export * from './src';
+  } catch {
+    export * from './lib/index';
+  }
+}`;
+        fs.writeFileSync(indexPath, wrapperContent);
         foundEntry = './index.ts';
-        console.log('⚠️  No entry point found, using root: ./index.ts');
+        console.log('✅ Created root index.ts wrapper');
       }
     }
     
