@@ -9,23 +9,27 @@ function tonBclSdkPlugin(): Plugin {
     name: 'ton-bcl-sdk-resolver',
     resolveId(id) {
       if (id === 'ton-bcl-sdk') {
-        // Пробуем разные пути
+        // Пробуем разные пути, начиная с корневого index.ts
         const possiblePaths = [
           resolve(__dirname, 'node_modules/ton-bcl-sdk/index.ts'),
           resolve(__dirname, 'node_modules/ton-bcl-sdk/index.js'),
           resolve(__dirname, 'node_modules/ton-bcl-sdk/src/index.ts'),
           resolve(__dirname, 'node_modules/ton-bcl-sdk/src/index.js'),
+          resolve(__dirname, 'node_modules/ton-bcl-sdk/src/BclSDK.ts'),
           resolve(__dirname, 'node_modules/ton-bcl-sdk/dist/index.js'),
         ];
         
         for (const p of possiblePaths) {
           if (fs.existsSync(p)) {
+            console.log(`[ton-bcl-sdk-resolver] Found: ${p}`);
             return p;
           }
         }
         
-        // Если ничего не найдено, возвращаем первый путь (Vite выдаст понятную ошибку)
-        return possiblePaths[0];
+        // Если ничего не найдено, возвращаем корневой index.ts (он должен быть создан postinstall)
+        const indexPath = resolve(__dirname, 'node_modules/ton-bcl-sdk/index.ts');
+        console.log(`[ton-bcl-sdk-resolver] Using: ${indexPath}`);
+        return indexPath;
       }
       return null;
     }
