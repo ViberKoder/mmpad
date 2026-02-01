@@ -16,25 +16,46 @@ if (fs.existsSync(packageJsonPath)) {
     const srcPath = path.join(sdkPath, 'src');
     const distPath = path.join(sdkPath, 'dist');
     
-    // Проверяем структуру пакета
-    const possibleEntries = [
-      { path: path.join(srcPath, 'index.ts'), value: './src/index.ts' },
-      { path: path.join(srcPath, 'index.js'), value: './src/index.js' },
-      { path: path.join(distPath, 'index.js'), value: './dist/index.js' },
-      { path: path.join(sdkPath, 'index.ts'), value: './index.ts' },
-      { path: path.join(sdkPath, 'index.js'), value: './index.js' },
-      { path: path.join(sdkPath, 'lib', 'index.js'), value: './lib/index.js' },
-      { path: path.join(sdkPath, 'build', 'index.js'), value: './build/index.js' }
-    ];
-    
-    let foundEntry = null;
-    for (const entry of possibleEntries) {
-      if (fs.existsSync(entry.path)) {
-        foundEntry = entry.value;
-        console.log(`✅ Found entry point: ${entry.path} -> ${entry.value}`);
-        break;
+      // Проверяем структуру пакета
+      const possibleEntries = [
+        { path: path.join(srcPath, 'index.ts'), value: './src/index.ts' },
+        { path: path.join(srcPath, 'index.js'), value: './src/index.js' },
+        { path: path.join(distPath, 'index.js'), value: './dist/index.js' },
+        { path: path.join(sdkPath, 'index.ts'), value: './index.ts' },
+        { path: path.join(sdkPath, 'index.js'), value: './index.js' },
+        { path: path.join(sdkPath, 'lib', 'index.js'), value: './lib/index.js' },
+        { path: path.join(sdkPath, 'build', 'index.js'), value: './build/index.js' }
+      ];
+      
+      let foundEntry = null;
+      for (const entry of possibleEntries) {
+        if (fs.existsSync(entry.path)) {
+          foundEntry = entry.value;
+          console.log(`✅ Found entry point: ${entry.path} -> ${entry.value}`);
+          // Читаем файл чтобы проверить экспорты
+          try {
+            const content = fs.readFileSync(entry.path, 'utf8');
+            const hasBclSDK = content.includes('BclSDK') || content.includes('export.*BclSDK');
+            const hasSimpleTonapi = content.includes('simpleTonapiProvider') || content.includes('export.*simpleTonapiProvider');
+            console.log(`   Exports check: BclSDK=${hasBclSDK}, simpleTonapiProvider=${hasSimpleTonapi}`);
+          } catch (e) {
+            console.log(`   Could not read file: ${e.message}`);
+          }
+          break;
+        }
       }
-    }
+      
+      // Если не нашли entry point, проверяем что есть в src
+      if (!foundEntry && fs.existsSync(srcPath)) {
+        const srcFiles = fs.readdirSync(srcPath);
+        console.log(`📁 Files in src/: ${srcFiles.join(', ')}`);
+        
+        // Ищем файлы с BclSDK
+        const bclSdkFiles = srcFiles.filter(f => f.toLowerCase().includes('bcl') || f.toLowerCase().includes('sdk'));
+        if (bclSdkFiles.length > 0) {
+          console.log(`📦 Found SDK files: ${bclSdkFiles.join(', ')}`);
+        }
+      }
     
     if (!foundEntry) {
       // Если ничего не найдено, проверяем что есть в пакете
@@ -143,16 +164,43 @@ export * from './src';
       "./*": "./*"
     };
     
-    // Если entry point - это корневой index.ts, который мы создали, убедимся что он существует
+    // Если entry point - это корневой index.ts, который мы создали, убедимся что он существует и правильный
     if (foundEntry === './index.ts') {
       const indexPath = path.join(sdkPath, 'index.ts');
-      if (!fs.existsSync(indexPath)) {
-        // Создаем wrapper если его еще нет
-        const srcIndexPath = path.join(sdkPath, 'src', 'index.ts');
-        const srcIndexJsPath = path.join(sdkPath, 'src', 'index.js');
-        const importPath = fs.existsSync(srcIndexPath) ? './src/index' 
-          : fs.existsSync(srcIndexJsPath) ? './src/index'
-          : './src';
+      let needsUpdate = true;
+      
+      if (fs.existsSync(indexPath)) {
+        // Проверяем содержимое существующего файла
+        try {
+          const existingContent = fs.readFileSync(indexPath, 'utf8');
+          if (existingContent.includes('export') && existingContent.includes('BclSDK')) {
+            needsUpdate = false;
+            console.log('✅ Existing index.ts looks good');
+          }
+        } catch (e) {
+          // Игнорируем ошибки чтения
+        }
+      }
+      
+      if (needsUpdate) {
+        // Определяем лучший путь для импорта
+        let importPath = './src';
+        if (fs.existsSync(path.join(sdkPath, 'src', 'index.ts'))) {
+          importPath = './src/index';
+        } else if (fs.existsSync(path.join(sdkPath, 'src', 'index.js'))) {
+          importPath = './src/index';
+        } else {
+          // Пробуем найти файл с BclSDK
+          if (fs.existsSync(srcPath)) {
+            const srcFiles = fs.readdirSync(srcPath);
+            const bclFile = srcFiles.find(f => f.includes('Bcl') || f.includes('bcl'));
+            if (bclFile) {
+              const name = bclFile.replace(/\.(ts|js)$/, '');
+              importPath = `./src/${name}`;
+              console.log(`📦 Using BclSDK file: ${bclFile}`);
+            }
+          }
+        }
         
         const wrapperContent = `// Auto-generated wrapper
 export * from '${importPath}';
