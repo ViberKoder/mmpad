@@ -10,25 +10,18 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
-    rollupOptions: {
-      external: (id) => {
-        // Не исключаем ton-bcl-sdk, но настраиваем его обработку
-        return false
-      }
-    },
     commonjsOptions: {
-      include: [/ton-bcl-sdk/, /node_modules/],
-      transformMixedEsModules: true,
-      defaultIsModuleExports: true
+      include: [/node_modules/],
+      transformMixedEsModules: true
     }
   },
   resolve: {
-    dedupe: ['ton-bcl-sdk']
+    alias: {
+      // Пробуем разные пути для ton-bcl-sdk
+      'ton-bcl-sdk': new URL('./node_modules/ton-bcl-sdk/src/index.ts', import.meta.url).pathname
+    }
   },
   optimizeDeps: {
-    include: ['ton-bcl-sdk'],
-    esbuildOptions: {
-      resolveExtensions: ['.ts', '.tsx', '.js', '.jsx']
-    }
+    exclude: ['ton-bcl-sdk'] // Исключаем из предварительной оптимизации
   }
 })

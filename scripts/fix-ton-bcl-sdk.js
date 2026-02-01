@@ -18,18 +18,34 @@ if (fs.existsSync(packageJsonPath)) {
       const srcPath = path.join(sdkPath, 'src');
       const distPath = path.join(sdkPath, 'dist');
       
-      if (fs.existsSync(path.join(srcPath, 'index.ts')) || fs.existsSync(path.join(srcPath, 'index.js'))) {
+      // Проверяем структуру пакета
+      const possibleEntries = [
+        { path: path.join(srcPath, 'index.ts'), value: './src/index.ts' },
+        { path: path.join(srcPath, 'index.js'), value: './src/index.js' },
+        { path: path.join(distPath, 'index.js'), value: './dist/index.js' },
+        { path: path.join(sdkPath, 'index.ts'), value: './index.ts' },
+        { path: path.join(sdkPath, 'index.js'), value: './index.js' },
+        { path: path.join(sdkPath, 'lib', 'index.js'), value: './lib/index.js' },
+        { path: path.join(sdkPath, 'build', 'index.js'), value: './build/index.js' }
+      ];
+      
+      let foundEntry = null;
+      for (const entry of possibleEntries) {
+        if (fs.existsSync(entry.path)) {
+          foundEntry = entry.value;
+          break;
+        }
+      }
+      
+      if (foundEntry) {
+        packageJson.main = foundEntry;
+        packageJson.module = foundEntry;
+        packageJson.types = foundEntry.replace(/\.js$/, '.d.ts').replace(/\.ts$/, '.d.ts');
+      } else {
+        // Если ничего не найдено, используем src/index.ts по умолчанию
         packageJson.main = './src/index.ts';
         packageJson.module = './src/index.ts';
         packageJson.types = './src/index.ts';
-      } else if (fs.existsSync(path.join(distPath, 'index.js'))) {
-        packageJson.main = './dist/index.js';
-        packageJson.module = './dist/index.js';
-        packageJson.types = './dist/index.d.ts';
-      } else if (fs.existsSync(path.join(sdkPath, 'index.ts')) || fs.existsSync(path.join(sdkPath, 'index.js'))) {
-        packageJson.main = './index.ts';
-        packageJson.module = './index.ts';
-        packageJson.types = './index.ts';
       }
       
       // Добавляем exports если его нет
