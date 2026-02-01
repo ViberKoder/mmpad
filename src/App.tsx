@@ -36,6 +36,25 @@ function App() {
     init()
   }, [])
 
+  // Убеждаемся, что walletService всегда создан
+  if (!walletService) {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: 'white'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <h1>🚀 MMPad</h1>
+          <p>Инициализация...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <TonConnectUIProvider manifestUrl={`${window.location.origin}/tonconnect-manifest.json`}>
       <div className="app">
