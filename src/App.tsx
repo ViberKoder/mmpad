@@ -93,38 +93,7 @@ function App() {
             </div>
           )}
           {activeTab === 'create' && walletService && (
-            tokenService ? (
-              <CreateTokenForm tokenService={tokenService} walletService={walletService} />
-            ) : (
-              <div style={{ 
-                background: 'white', 
-                padding: '2rem', 
-                borderRadius: '16px',
-                textAlign: 'center',
-                maxWidth: '600px',
-                margin: '0 auto'
-              }}>
-                <h2>Создать новый токен</h2>
-                <p style={{ marginTop: '1rem', color: '#666' }}>
-                  Инициализация SDK... Пожалуйста, подождите.
-                </p>
-                {initError && (
-                  <div style={{ 
-                    background: '#fee', 
-                    color: '#c33', 
-                    padding: '1rem', 
-                    borderRadius: '8px',
-                    marginTop: '1rem',
-                    border: '1px solid #c33'
-                  }}>
-                    ⚠️ {initError}
-                    <p style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>
-                      Форма будет доступна после инициализации SDK.
-                    </p>
-                  </div>
-                )}
-              </div>
-            )
+            <CreateTokenForm tokenService={tokenService} walletService={walletService} />
           )}
           {activeTab === 'list' && (
             tokenService ? (
