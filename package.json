@@ -12,7 +12,7 @@
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "ton-bcl-sdk": "github:ton-fun-tech/ton-bcl-sdk",
+    "ton-bcl-sdk": "github:ton-fun-tech/ton-bcl-sdk#main",
     "@ton/core": "^0.57.0",
     "@ton/crypto": "^3.2.0",
     "@ton/ton": "^13.0.0",
