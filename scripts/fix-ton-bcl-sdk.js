@@ -88,15 +88,55 @@ if (fs.existsSync(packageJsonPath)) {
         
         // Если нашли файл, создаем wrapper с реэкспортом
         // Если нет, создаем базовый экспорт с типами
-        const wrapperContent = importPath 
-          ? `// Auto-generated wrapper
+        // Если нашли файл, читаем его чтобы понять структуру экспортов
+        let wrapperContent = '';
+        if (importPath) {
+          try {
+            const sourceFile = importPath.replace('./', '');
+            const fullPath = path.join(sdkPath, sourceFile + '.ts') || path.join(sdkPath, sourceFile + '.js');
+            if (fs.existsSync(fullPath)) {
+              const sourceContent = fs.readFileSync(fullPath, 'utf8');
+              // Проверяем, есть ли экспорты BclSDK и simpleTonapiProvider
+              if (sourceContent.includes('BclSDK') || sourceContent.includes('simpleTonapiProvider')) {
+                wrapperContent = `// Auto-generated wrapper
 export * from '${importPath}';
 export { default } from '${importPath}';
-`
-          : `// Auto-generated wrapper
-// Re-export common exports that might exist
+`;
+              } else {
+                wrapperContent = `// Auto-generated wrapper
+export * from '${importPath}';
+`;
+              }
+            } else {
+              wrapperContent = `// Auto-generated wrapper
+export * from '${importPath}';
+`;
+            }
+          } catch (e) {
+            wrapperContent = `// Auto-generated wrapper
+export * from '${importPath}';
+`;
+          }
+        } else {
+          // Пробуем найти любой файл в src и экспортировать из него
+          if (fs.existsSync(srcPath)) {
+            const srcFiles = fs.readdirSync(srcPath).filter(f => f.endsWith('.ts') || f.endsWith('.js'));
+            if (srcFiles.length > 0) {
+              wrapperContent = `// Auto-generated wrapper
 export * from './src';
 `;
+            } else {
+              wrapperContent = `// Auto-generated wrapper - empty
+export {};
+`;
+            }
+          } else {
+            wrapperContent = `// Auto-generated wrapper - empty
+export {};
+`;
+          }
+        }
+        
         fs.writeFileSync(indexPath, wrapperContent);
         foundEntry = './index.ts';
         console.log(`✅ Created root index.ts wrapper${importPath ? ` importing from ${importPath}` : ' (fallback)'}`);
