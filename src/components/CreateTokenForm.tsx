@@ -4,7 +4,7 @@ import { WalletService } from '../services/walletService'
 import './CreateTokenForm.css'
 
 interface CreateTokenFormProps {
-  tokenService: TokenService
+  tokenService: TokenService | null
   walletService: WalletService | null
 }
 
@@ -24,6 +24,11 @@ export default function CreateTokenForm({ tokenService, walletService }: CreateT
     e.preventDefault()
     setError(null)
     setSuccess(false)
+
+    if (!tokenService) {
+      setError('Сервис токенов не инициализирован. Пожалуйста, подождите...')
+      return
+    }
 
     if (!walletService || !walletService.isConnected()) {
       setError('Пожалуйста, подключите кошелек')
@@ -145,8 +150,8 @@ export default function CreateTokenForm({ tokenService, walletService }: CreateT
         {error && <div className="error-message">{error}</div>}
         {success && <div className="success-message">Токен создан! Транзакция отправлена.</div>}
 
-        <button type="submit" disabled={loading} className="submit-btn">
-          {loading ? 'Создание...' : 'Создать токен'}
+        <button type="submit" disabled={loading || !tokenService} className="submit-btn">
+          {loading ? 'Создание...' : tokenService ? 'Создать токен' : 'Ожидание инициализации...'}
         </button>
       </form>
     </div>
