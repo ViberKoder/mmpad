@@ -1,9 +1,39 @@
-import { defineConfig } from 'vite'
+import { defineConfig, Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
+import fs from 'fs'
+
+// Плагин для обработки ton-bcl-sdk
+function tonBclSdkPlugin(): Plugin {
+  return {
+    name: 'ton-bcl-sdk-resolver',
+    resolveId(id) {
+      if (id === 'ton-bcl-sdk') {
+        // Пробуем разные пути
+        const possiblePaths = [
+          resolve(__dirname, 'node_modules/ton-bcl-sdk/src/index.ts'),
+          resolve(__dirname, 'node_modules/ton-bcl-sdk/src/index.js'),
+          resolve(__dirname, 'node_modules/ton-bcl-sdk/index.ts'),
+          resolve(__dirname, 'node_modules/ton-bcl-sdk/index.js'),
+          resolve(__dirname, 'node_modules/ton-bcl-sdk/dist/index.js'),
+        ];
+        
+        for (const p of possiblePaths) {
+          if (fs.existsSync(p)) {
+            return p;
+          }
+        }
+        
+        // Если ничего не найдено, возвращаем первый путь (Vite выдаст понятную ошибку)
+        return possiblePaths[0];
+      }
+      return null;
+    }
+  };
+}
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tonBclSdkPlugin()],
   server: {
     port: 3000,
     host: true
