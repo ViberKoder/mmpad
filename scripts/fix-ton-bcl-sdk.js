@@ -67,15 +67,31 @@ if (fs.existsSync(packageJsonPath)) {
       // Если все еще не найдено, создаем корневой index.ts
       if (!foundEntry) {
         const indexPath = path.join(sdkPath, 'index.ts');
-        // Создаем минимальный index.ts который пытается импортировать из src
-        // Используем условный экспорт через реэкспорт
-        const wrapperContent = `// Auto-generated wrapper
-// Try to export from src/index first
-export * from './src/index';
+        // Определяем, откуда импортировать
+        let importPath = './src/index';
+        if (fs.existsSync(path.join(sdkPath, 'src', 'index.ts'))) {
+          importPath = './src/index';
+        } else if (fs.existsSync(path.join(sdkPath, 'src', 'index.js'))) {
+          importPath = './src/index';
+        } else if (fs.existsSync(path.join(sdkPath, 'lib', 'index.js'))) {
+          importPath = './lib/index';
+        } else if (fs.existsSync(path.join(sdkPath, 'dist', 'index.js'))) {
+          importPath = './dist/index';
+        } else {
+          // Если ничего не найдено, создаем пустой экспорт
+          importPath = null;
+        }
+        
+        const wrapperContent = importPath 
+          ? `// Auto-generated wrapper
+export * from '${importPath}';
+`
+          : `// Auto-generated wrapper - no source found
+export {};
 `;
         fs.writeFileSync(indexPath, wrapperContent);
         foundEntry = './index.ts';
-        console.log('✅ Created root index.ts wrapper');
+        console.log(`✅ Created root index.ts wrapper${importPath ? ` importing from ${importPath}` : ' (empty)'}`);
       }
     }
     
