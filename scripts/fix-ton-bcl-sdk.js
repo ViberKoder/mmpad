@@ -91,48 +91,32 @@ if (fs.existsSync(packageJsonPath)) {
         // Если нашли файл, читаем его чтобы понять структуру экспортов
         let wrapperContent = '';
         if (importPath) {
-          try {
-            const sourceFile = importPath.replace('./', '');
-            const fullPath = path.join(sdkPath, sourceFile + '.ts') || path.join(sdkPath, sourceFile + '.js');
-            if (fs.existsSync(fullPath)) {
-              const sourceContent = fs.readFileSync(fullPath, 'utf8');
-              // Проверяем, есть ли экспорты BclSDK и simpleTonapiProvider
-              if (sourceContent.includes('BclSDK') || sourceContent.includes('simpleTonapiProvider')) {
-                wrapperContent = `// Auto-generated wrapper
-export * from '${importPath}';
-export { default } from '${importPath}';
-`;
-              } else {
-                wrapperContent = `// Auto-generated wrapper
+          // Просто реэкспортируем все из найденного пути
+          wrapperContent = `// Auto-generated wrapper
 export * from '${importPath}';
 `;
-              }
-            } else {
-              wrapperContent = `// Auto-generated wrapper
-export * from '${importPath}';
-`;
-            }
-          } catch (e) {
-            wrapperContent = `// Auto-generated wrapper
-export * from '${importPath}';
-`;
-          }
         } else {
-          // Пробуем найти любой файл в src и экспортировать из него
+          // Пробуем найти все файлы в src и создать агрегированный экспорт
           if (fs.existsSync(srcPath)) {
-            const srcFiles = fs.readdirSync(srcPath).filter(f => f.endsWith('.ts') || f.endsWith('.js'));
+            const srcFiles = fs.readdirSync(srcPath).filter(f => (f.endsWith('.ts') || f.endsWith('.js')) && !f.endsWith('.d.ts'));
             if (srcFiles.length > 0) {
+              // Создаем экспорты из всех файлов
+              const exports = srcFiles.map(f => {
+                const name = f.replace(/\.(ts|js)$/, '');
+                return `export * from './src/${name}';`;
+              }).join('\n');
+              wrapperContent = `// Auto-generated wrapper
+${exports}
+`;
+            } else {
               wrapperContent = `// Auto-generated wrapper
 export * from './src';
 `;
-            } else {
-              wrapperContent = `// Auto-generated wrapper - empty
-export {};
-`;
             }
           } else {
-            wrapperContent = `// Auto-generated wrapper - empty
-export {};
+            // Последняя попытка - экспортируем из src если папка существует
+            wrapperContent = `// Auto-generated wrapper
+export * from './src';
 `;
           }
         }
