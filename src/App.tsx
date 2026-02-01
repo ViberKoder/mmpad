@@ -58,9 +58,9 @@ function App() {
 
   return (
     <TonConnectUIProvider manifestUrl={`${window.location.origin}/tonconnect-manifest.json`}>
-      <div className="app">
+      <div className="app" style={{ minHeight: '100vh' }}>
         <Header walletService={walletService} />
-        <div className="tabs">
+        <div className="tabs" style={{ display: 'flex', gap: '1rem', padding: '1rem 2rem', background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', justifyContent: 'center', flexWrap: 'wrap' }}>
           <button 
             className={activeTab === 'create' ? 'active' : ''} 
             onClick={() => setActiveTab('create')}
