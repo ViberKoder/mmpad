@@ -45,11 +45,12 @@ function App() {
         alignItems: 'center', 
         justifyContent: 'center',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        color: 'white'
+        color: 'white',
+        padding: '2rem'
       }}>
-        <div style={{ textAlign: 'center' }}>
-          <h1>🚀 MMPad</h1>
-          <p>Инициализация...</p>
+        <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.1)', padding: '2rem', borderRadius: '16px' }}>
+          <h1 style={{ margin: '0 0 1rem 0' }}>🚀 MMPad</h1>
+          <p style={{ margin: 0 }}>Инициализация...</p>
         </div>
       </div>
     );
