@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { resolve } from 'path'
 
 export default defineConfig({
   plugins: [react()],
@@ -11,18 +10,25 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    rollupOptions: {
+      external: (id) => {
+        // Не исключаем ton-bcl-sdk, но настраиваем его обработку
+        return false
+      }
+    },
     commonjsOptions: {
       include: [/ton-bcl-sdk/, /node_modules/],
-      transformMixedEsModules: true
+      transformMixedEsModules: true,
+      defaultIsModuleExports: true
     }
   },
   resolve: {
-    alias: {
-      'ton-bcl-sdk': resolve(__dirname, 'node_modules/ton-bcl-sdk/src/index.ts')
-    }
+    dedupe: ['ton-bcl-sdk']
   },
   optimizeDeps: {
     include: ['ton-bcl-sdk'],
-    exclude: []
+    esbuildOptions: {
+      resolveExtensions: ['.ts', '.tsx', '.js', '.jsx']
+    }
   }
 })
