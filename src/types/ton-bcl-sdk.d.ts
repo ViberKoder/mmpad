@@ -30,4 +30,6 @@ declare module 'ton-bcl-sdk' {
   }
 
   export function simpleTonapiProvider(api: Api): any;
+  
+  export { BclSDK as default };
 }

@@ -11,10 +11,10 @@ function tonBclSdkPlugin(): Plugin {
       if (id === 'ton-bcl-sdk') {
         // Пробуем разные пути
         const possiblePaths = [
-          resolve(__dirname, 'node_modules/ton-bcl-sdk/src/index.ts'),
-          resolve(__dirname, 'node_modules/ton-bcl-sdk/src/index.js'),
           resolve(__dirname, 'node_modules/ton-bcl-sdk/index.ts'),
           resolve(__dirname, 'node_modules/ton-bcl-sdk/index.js'),
+          resolve(__dirname, 'node_modules/ton-bcl-sdk/src/index.ts'),
+          resolve(__dirname, 'node_modules/ton-bcl-sdk/src/index.js'),
           resolve(__dirname, 'node_modules/ton-bcl-sdk/dist/index.js'),
         ];
         
@@ -48,7 +48,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      'ton-bcl-sdk': resolve(__dirname, 'node_modules/ton-bcl-sdk/src/index.ts')
+      'ton-bcl-sdk': resolve(__dirname, 'node_modules/ton-bcl-sdk/index.ts')
     }
   },
   optimizeDeps: {
