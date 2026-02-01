@@ -13,37 +13,37 @@ const stubContent = `// Auto-generated stub for ton-bcl-sdk
 // This is a temporary stub until the package is properly set up
 
 export class BclSDK {
-  static create(config: any): BclSDK {
+  static create(_config: any): BclSDK {
     throw new Error('ton-bcl-sdk is not properly installed. Please check the package installation.');
   }
   
   api: any;
-  openCoin(address: any): any {
+  openCoin(_address: any): any {
     throw new Error('ton-bcl-sdk is not properly installed.');
   }
   
-  openUserCoinWallet(coinAddress: any, userAddress: any): Promise<any> {
+  openUserCoinWallet(_coinAddress: any, _userAddress: any): Promise<any> {
     throw new Error('ton-bcl-sdk is not properly installed.');
   }
   
-  deployCoin(sender: any, params: any, options?: any): Promise<void> {
+  deployCoin(_sender: any, _params: any, _options?: any): Promise<void> {
     throw new Error('ton-bcl-sdk is not properly installed.');
   }
   
-  getUserCoinBalance(coinAddress: any, userAddress: any): Promise<bigint> {
+  getUserCoinBalance(_coinAddress: any, _userAddress: any): Promise<bigint> {
     throw new Error('ton-bcl-sdk is not properly installed.');
   }
   
-  getCoinsForTons(coinAddress: any, tons: bigint): Promise<bigint> {
+  getCoinsForTons(_coinAddress: any, _tons: bigint): Promise<bigint> {
     throw new Error('ton-bcl-sdk is not properly installed.');
   }
   
-  getTonsForCoins(coinAddress: any, coins: bigint): Promise<bigint> {
+  getTonsForCoins(_coinAddress: any, _coins: bigint): Promise<bigint> {
     throw new Error('ton-bcl-sdk is not properly installed.');
   }
 }
 
-export function simpleTonapiProvider(api: any): any {
+export function simpleTonapiProvider(_api: any): any {
   throw new Error('ton-bcl-sdk is not properly installed.');
 }
 
