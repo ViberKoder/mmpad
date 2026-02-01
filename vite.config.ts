@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { resolve } from 'path'
 
 export default defineConfig({
   plugins: [react()],
@@ -17,11 +18,10 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      // Пробуем разные пути для ton-bcl-sdk
-      'ton-bcl-sdk': new URL('./node_modules/ton-bcl-sdk/src/index.ts', import.meta.url).pathname
+      'ton-bcl-sdk': resolve(__dirname, 'node_modules/ton-bcl-sdk/src/index.ts')
     }
   },
   optimizeDeps: {
-    exclude: ['ton-bcl-sdk'] // Исключаем из предварительной оптимизации
+    exclude: ['ton-bcl-sdk']
   }
 })
