@@ -106,7 +106,8 @@ export * from './src';
     // Устанавливаем точки входа
     packageJson.main = foundEntry;
     packageJson.module = foundEntry;
-    packageJson.types = foundEntry.replace(/\.js$/, '.d.ts').replace(/\.ts$/, '.d.ts');
+    const typesPath = foundEntry.replace(/\.js$/, '.d.ts').replace(/\.ts$/, '.d.ts');
+    packageJson.types = typesPath;
     
     // Добавляем/обновляем exports
     packageJson.exports = {
@@ -114,8 +115,28 @@ export * from './src';
         "import": packageJson.module,
         "require": packageJson.main,
         "types": packageJson.types
-      }
+      },
+      "./*": "./*"
     };
+    
+    // Если entry point - это корневой index.ts, который мы создали, убедимся что он существует
+    if (foundEntry === './index.ts') {
+      const indexPath = path.join(sdkPath, 'index.ts');
+      if (!fs.existsSync(indexPath)) {
+        // Создаем wrapper если его еще нет
+        const srcIndexPath = path.join(sdkPath, 'src', 'index.ts');
+        const srcIndexJsPath = path.join(sdkPath, 'src', 'index.js');
+        const importPath = fs.existsSync(srcIndexPath) ? './src/index' 
+          : fs.existsSync(srcIndexJsPath) ? './src/index'
+          : './src';
+        
+        const wrapperContent = `// Auto-generated wrapper
+export * from '${importPath}';
+`;
+        fs.writeFileSync(indexPath, wrapperContent);
+        console.log(`✅ Created/updated index.ts wrapper importing from ${importPath}`);
+      }
+    }
     
     fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
     console.log('✅ Fixed ton-bcl-sdk package.json with entry:', foundEntry);
