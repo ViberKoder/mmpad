@@ -149,28 +149,52 @@ if (fs.existsSync(packageJsonPath)) {
 export * from '${importPath}';
 `;
         } else {
-          // Пробуем найти все файлы в src и создать агрегированный экспорт
-          if (fs.existsSync(srcPath)) {
-            const srcFiles = fs.readdirSync(srcPath).filter(f => (f.endsWith('.ts') || f.endsWith('.js')) && !f.endsWith('.d.ts'));
-            if (srcFiles.length > 0) {
-              // Создаем экспорты из всех файлов
-              const exports = srcFiles.map(f => {
-                const name = f.replace(/\.(ts|js)$/, '');
-                return `export * from './src/${name}';`;
-              }).join('\n');
-              wrapperContent = `// Auto-generated wrapper
+          // Пробуем найти файлы в разных местах
+          const possibleDirs = ['src', 'lib', 'dist', 'build'];
+          let foundDir = null;
+          
+          for (const dir of possibleDirs) {
+            const dirPath = path.join(sdkPath, dir);
+            if (fs.existsSync(dirPath)) {
+              try {
+                const dirFiles = fs.readdirSync(dirPath).filter(f => (f.endsWith('.ts') || f.endsWith('.js')) && !f.endsWith('.d.ts'));
+                if (dirFiles.length > 0) {
+                  foundDir = dir;
+                  console.log(`📦 Found files in ${dir}/: ${dirFiles.slice(0, 5).join(', ')}${dirFiles.length > 5 ? '...' : ''}`);
+                  
+                  // Если есть index файл, используем его
+                  const indexFile = dirFiles.find(f => f.includes('index'));
+                  if (indexFile) {
+                    const name = indexFile.replace(/\.(ts|js)$/, '');
+                    wrapperContent = `// Auto-generated wrapper
+export * from './${dir}/${name}';
+`;
+                    break;
+                  } else {
+                    // Экспортируем из всех файлов
+                    const exports = dirFiles.map(f => {
+                      const name = f.replace(/\.(ts|js)$/, '');
+                      return `export * from './${dir}/${name}';`;
+                    }).join('\n');
+                    wrapperContent = `// Auto-generated wrapper
 ${exports}
 `;
-            } else {
-              wrapperContent = `// Auto-generated wrapper
-export * from './src';
-`;
+                    break;
+                  }
+                }
+              } catch (e) {
+                // Игнорируем ошибки
+              }
             }
-          } else {
-            // Последняя попытка - экспортируем из src если папка существует
-            wrapperContent = `// Auto-generated wrapper
-export * from './src';
+          }
+          
+          if (!wrapperContent) {
+            // Если ничего не найдено, создаем пустой экспорт
+            wrapperContent = `// Auto-generated wrapper - no source files found
+// This package may need to be built first
+export {};
 `;
+            console.warn('⚠️  No source files found, created empty export');
           }
         }
         
