@@ -239,30 +239,54 @@ export {};
       }
       
       if (needsUpdate) {
-        // Определяем лучший путь для импорта
-        let importPath = './src';
-        if (fs.existsSync(path.join(sdkPath, 'src', 'index.ts'))) {
-          importPath = './src/index';
-        } else if (fs.existsSync(path.join(sdkPath, 'src', 'index.js'))) {
-          importPath = './src/index';
-        } else {
-          // Пробуем найти файл с BclSDK
-          if (fs.existsSync(srcPath)) {
-            const srcFiles = fs.readdirSync(srcPath);
-            const bclFile = srcFiles.find(f => f.includes('Bcl') || f.includes('bcl'));
-            if (bclFile) {
-              const name = bclFile.replace(/\.(ts|js)$/, '');
-              importPath = `./src/${name}`;
-              console.log(`📦 Using BclSDK file: ${bclFile}`);
+        // Определяем лучший путь для импорта, проверяя все возможные места
+        let importPath = null;
+        const possibleDirs = ['src', 'lib', 'dist', 'build'];
+        
+        for (const dir of possibleDirs) {
+          const dirPath = path.join(sdkPath, dir);
+          if (fs.existsSync(dirPath)) {
+            try {
+              const dirFiles = fs.readdirSync(dirPath).filter(f => (f.endsWith('.ts') || f.endsWith('.js')) && !f.endsWith('.d.ts'));
+              if (dirFiles.length > 0) {
+                // Если есть index файл, используем его
+                const indexFile = dirFiles.find(f => f.includes('index'));
+                if (indexFile) {
+                  const name = indexFile.replace(/\.(ts|js)$/, '');
+                  importPath = `./${dir}/${name}`;
+                  console.log(`📦 Found index in ${dir}/: ${importPath}`);
+                  break;
+                } else {
+                  // Используем первый файл
+                  const firstFile = dirFiles[0];
+                  const name = firstFile.replace(/\.(ts|js)$/, '');
+                  importPath = `./${dir}/${name}`;
+                  console.log(`📦 Using first file from ${dir}/: ${importPath}`);
+                  break;
+                }
+              }
+            } catch (e) {
+              // Игнорируем ошибки
             }
           }
         }
         
-        const wrapperContent = `// Auto-generated wrapper
+        let wrapperContent = '';
+        if (importPath) {
+          wrapperContent = `// Auto-generated wrapper
 export * from '${importPath}';
 `;
+        } else {
+          // Если ничего не найдено, создаем пустой экспорт
+          wrapperContent = `// Auto-generated wrapper - no source files found
+// This package may need to be built first
+export {};
+`;
+          console.warn('⚠️  No source files found for wrapper, created empty export');
+        }
+        
         fs.writeFileSync(indexPath, wrapperContent);
-        console.log(`✅ Created/updated index.ts wrapper importing from ${importPath}`);
+        console.log(`✅ Created/updated index.ts wrapper${importPath ? ` importing from ${importPath}` : ' (empty)'}`);
       }
     }
     
