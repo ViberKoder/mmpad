@@ -44,13 +44,13 @@ function App() {
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        color: 'white',
+        background: '#f5f5f5',
+        color: '#1a1a1a',
         padding: '2rem'
       }}>
-        <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.1)', padding: '2rem', borderRadius: '16px' }}>
-          <h1 style={{ margin: '0 0 1rem 0' }}>🚀 MMPad</h1>
-          <p style={{ margin: 0 }}>Инициализация...</p>
+        <div style={{ textAlign: 'center', background: 'white', padding: '2rem', borderRadius: '12px', border: '1px solid #e0e0e0' }}>
+          <h1 style={{ margin: '0 0 1rem 0', color: '#1a1a1a' }}>🚀 MMPad</h1>
+          <p style={{ margin: 0, color: '#666' }}>Инициализация...</p>
         </div>
       </div>
     );
