@@ -1,4 +1,4 @@
-import { BclSDK } from "ton-bcl-sdk";
+import type { BclSDK } from "ton-bcl-sdk";
 import { Address, Sender } from "@ton/core";
 
 export interface TokenInfo {
