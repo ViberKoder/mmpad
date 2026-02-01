@@ -13,7 +13,7 @@ export async function initSDK(): Promise<BclSDK> {
       baseApiParams: {
         headers: {
           "Content-type": "application/json",
-          Authorization: TONAPI_TOKEN ? `Bearer ${TONAPI_TOKEN}` : undefined
+          ...(TONAPI_TOKEN ? { Authorization: `Bearer ${TONAPI_TOKEN}` } : {})
         },
       },
     })

@@ -20,8 +20,9 @@ export class WalletService {
       // Используем первый доступный кошелек
       const wallet = wallets[0];
       
-      // Для встроенных кошельков (Telegram)
-      if (wallet.embedded) {
+      // Проверяем тип кошелька и подключаемся соответствующим образом
+      if ('embedded' in wallet && wallet.embedded && 'jsBridgeKey' in wallet) {
+        // Для встроенных кошельков (Telegram)
         await this.tonConnect.connect({ jsBridgeKey: wallet.jsBridgeKey });
       } else {
         // Для внешних кошельков используем универсальную ссылку

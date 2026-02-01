@@ -52,7 +52,6 @@ export class TokenService {
 
   async getTokenInfo(coinAddress: Address): Promise<TokenInfo | null> {
     try {
-      const coin = this.sdk.openCoin(coinAddress);
       // Получение информации о токене через API
       // Проверяем наличие метода getCoinInfo
       let info: any = {};
