@@ -59,12 +59,44 @@ if (fs.existsSync(packageJsonPath)) {
     
     if (!foundEntry) {
       // Если ничего не найдено, проверяем что есть в пакете
-      const files = fs.readdirSync(sdkPath, { withFileTypes: true });
-      const dirs = files.filter(f => f.isDirectory()).map(d => d.name);
-      const tsFiles = files.filter(f => f.isFile() && f.name.endsWith('.ts')).map(f => f.name);
-      const jsFiles = files.filter(f => f.isFile() && f.name.endsWith('.js')).map(f => f.name);
+      let files = [];
+      let dirs = [];
+      let tsFiles = [];
+      let jsFiles = [];
+      
+      try {
+        files = fs.readdirSync(sdkPath, { withFileTypes: true });
+        dirs = files.filter(f => f.isDirectory()).map(d => d.name);
+        tsFiles = files.filter(f => f.isFile() && f.name.endsWith('.ts')).map(f => f.name);
+        jsFiles = files.filter(f => f.isFile() && f.name.endsWith('.js')).map(f => f.name);
+      } catch (e) {
+        console.warn('⚠️  Could not read package directory:', e.message);
+      }
       
       console.log('📁 Package structure:', { dirs, tsFiles, jsFiles });
+      
+      // Проверяем все подпапки на наличие файлов
+      for (const dir of dirs) {
+        const dirPath = path.join(sdkPath, dir);
+        try {
+          const dirFiles = fs.readdirSync(dirPath);
+          console.log(`📂 Files in ${dir}/: ${dirFiles.slice(0, 10).join(', ')}${dirFiles.length > 10 ? '...' : ''}`);
+          
+          // Ищем index файлы в подпапках
+          if (dirFiles.some(f => f.includes('index'))) {
+            const indexFile = dirFiles.find(f => f.includes('index'));
+            const ext = indexFile.endsWith('.ts') ? '.ts' : '.js';
+            const entryPath = path.join(dirPath, `index${ext}`);
+            if (fs.existsSync(entryPath)) {
+              foundEntry = `./${dir}/index${ext}`;
+              console.log(`✅ Found entry in ${dir}/: ${foundEntry}`);
+              break;
+            }
+          }
+        } catch (e) {
+          // Игнорируем ошибки чтения подпапок
+        }
+      }
       
       // Пробуем найти index в src
       if (fs.existsSync(srcPath)) {
